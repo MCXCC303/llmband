@@ -1,0 +1,625 @@
+<template>
+	<div class="page" @touchstart="onSwipeStart" @touchend="onSwipeEnd">
+		<!-- V4:DSBand 式 swiper 多页(每页一个供应商);indicator 关闭与 DSBand 一致;
+		     顶栏与胶囊随页滚动;供应商名只在顶栏显示一次(页内 prov-header 已移除) -->
+		<swiper class="swiper" indicator="false" loop="false" @change="onSwiperChange">
+			<div class="panel" for="prov in providers" tid="id">
+				<scroll class="content" scroll-y="true">
+					<!-- 顶栏(随页滚动):时钟 + 品牌文字(当前供应商名) -->
+					<div class="topbar">
+						<text class="clock-flat" if="{{ useFlatClock }}" style="color: {{ clockColor }}">{{ clockText }}</text>
+						<div class="arc-clock" else>
+							<!-- 注意:勿加 tid。键从 0 开始时,首个键 0(falsy)会导致首字符补丁失效 -->
+							<div
+								class="arc-char-box {{ $item.rotClass }}"
+								for="{{ clockChars }}"
+								style="left: {{ $item.x }}px; top: {{ $item.y }}px"
+							>
+								<text class="clock-char" style="color: {{ $item.color }}">{{ $item.ch }}</text>
+							</div>
+						</div>
+						<text class="brand">{{ prov.name }}</text>
+					</div>
+
+					<!-- 同步胶囊(随页滚动) -->
+					<div class="pill-row">
+						<div class="pill pill-{{ pillClass }}">
+							<text class="pill-text" style="color: {{ pillTextColor }}">{{ statusText }}</text>
+						</div>
+					</div>
+
+					<!-- 组件渲染:每组件一个区块。图头用已验证的 div 包裹结构(head-row),
+						居中双行由 CSS 实现;模板保持与真机基线一致的最小结构 -->
+				<div class="widget" for="w in prov.widgets">
+						<div class="section-top" if="{{ $idx > 0 }}" style="height: {{ w.gapBefore }}px;"></div>
+
+						<!-- 数值大字(余额等) -->
+						<div class="w-balance" if="{{ w.isBalance }}">
+							<text class="head-label" if="{{ w.label }}">{{ w.label }}</text>
+							<text class="{{ w.heroClass }}" style="color: {{ w.valueColor }};">{{ w.value }}</text>
+							<text class="w-hint" style="color: {{ w.hintColor }};" if="{{ w.hint }}">{{ w.hint }}</text>
+						</div>
+
+						<!-- 键值行 -->
+						<div class="w-kv" elif="{{ w.isKv }}">
+							<text class="kv-label" style="color: {{ w.labelColor }};">{{ w.label }}</text>
+							<text class="kv-value" style="color: {{ w.valueColor }};">{{ w.value }}</text>
+						</div>
+
+						<!-- 进度条 -->
+						<div class="w-bar" elif="{{ w.isBar }}">
+							<div class="head-row">
+								<text class="head-label" style="color: {{ w.labelColor }};">{{ w.label }}</text>
+								<text class="head-value" style="color: {{ w.valueColor }};">{{ w.value }}</text>
+							</div>
+							<div class="bar-track" style="height: {{ w.barHeight }}px; border-radius: {{ w.barRadius }}px;">
+								<div
+									class="bar-fill"
+									style="width: {{ w.percent }}%; height: {{ w.barHeight }}px; border-radius: {{ w.barRadius }}px; background-color: {{ w.color }};"
+								></div>
+							</div>
+						</div>
+
+						<!-- 环状图 -->
+						<div class="w-ring" elif="{{ w.isRing }}">
+							<div class="ring-wrap" style="width: {{ w.ringSize }}px; height: {{ w.ringSize }}px;">
+								<progress
+									class="ring-arc"
+									type="arc"
+									percent="{{ w.percent }}"
+									style="color: {{ w.color }}; width: {{ w.ringSize }}px; height: {{ w.ringSize }}px;"
+								></progress>
+								<div class="ring-center" style="width: {{ w.ringSize }}px; height: {{ w.ringSize }}px;">
+									<text class="ring-value" style="color: {{ w.valueColor }};">{{ w.value }}</text>
+								</div>
+							</div>
+							<text class="ring-caption" style="color: {{ w.labelColor }};" if="{{ w.label }}">{{ w.label }}</text>
+						</div>
+
+						<!-- 柱状图(带首/中/末日期锚点) -->
+						<div class="w-bars" elif="{{ w.isBars }}">
+							<div class="head-row">
+								<text class="head-label" style="color: {{ w.labelColor }};">{{ w.label }}</text>
+								<text class="head-value" style="color: {{ w.valueColor }};">{{ w.value }}</text>
+							</div>
+							<div class="bars-strip" style="height: {{ w.barsHeight }}px;">
+								<div
+									class="bars-col"
+									for="b in w.bars"
+									style="width: {{ b.wPct }}%; height: {{ b.hPct }}%; margin-left: {{ b.gap }}px; background-color: {{ w.color }}; border-radius: {{ w.barRadius }}px;"
+								></div>
+							</div>
+							<div class="bars-anchors">
+								<text class="bars-anchor" style="color: {{ w.hintColor }};">{{ w.anchors[0] }}</text>
+								<text class="bars-anchor" style="color: {{ w.hintColor }};">{{ w.anchors[1] }}</text>
+								<text class="bars-anchor" style="color: {{ w.hintColor }};">{{ w.anchors[2] }}</text>
+							</div>
+						</div>
+
+						<!-- 占比堆叠条 -->
+						<div class="w-stack" elif="{{ w.isStack }}">
+							<div class="head-row">
+								<text class="head-label" style="color: {{ w.labelColor }};">{{ w.label }}</text>
+								<text class="head-value" style="color: {{ w.valueColor }};">{{ w.value }}</text>
+							</div>
+							<div class="stack-bar" style="height: {{ w.stackHeight }}px; border-radius: {{ w.stackRadius }}px;">
+								<div
+									class="stack-seg"
+									for="s in w.segs"
+									style="width: {{ s.wPct }}%; background-color: {{ s.bg }};"
+								></div>
+							</div>
+							<div class="stack-hints" if="{{ w.hintLines.length > 0 }}">
+								<text class="stack-hint" style="color: {{ w.hintColor }};" for="line in w.hintLines">{{ line }}</text>
+							</div>
+						</div>
+
+						<!-- 横置条形图(旋转90°的条形图:每项一行水平条 + 行尾数值) -->
+						<div class="w-hbar" elif="{{ w.isHbar }}">
+							<div class="head-row">
+								<text class="head-label" style="color: {{ w.labelColor }};">{{ w.label }}</text>
+								<text class="head-value" style="color: {{ w.valueColor }};">{{ w.value }}</text>
+							</div>
+							<div class="hbar-rows">
+								<div class="hbar-row" for="r in w.rows">
+									<div class="hbar-head">
+										<text class="hbar-name" style="color: {{ w.labelColor }};">{{ r.name }}</text>
+										<text class="hbar-value" style="color: {{ w.rowColor }};">{{ r.text }}</text>
+									</div>
+									<div class="hbar-track" style="height: {{ w.barHeight }}px; border-radius: {{ w.barRadius }}px;">
+										<div
+											class="hbar-fill"
+											style="width: {{ r.wPct }}%; height: {{ w.barHeight }}px; border-radius: {{ w.barRadius }}px; background-color: {{ w.color }};"
+										></div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- 占比圆环:每模型一个小圆环,弧长 = 占总量比例(100% = 总量) -->
+						<div class="w-ringshare" elif="{{ w.isRingShare }}">
+							<div class="head-row">
+								<text class="head-label" style="color: {{ w.labelColor }};">{{ w.label }}</text>
+							</div>
+							<div class="ringshare-list">
+								<div class="ringshare-item" for="m in w.items">
+									<div class="ringshare-box" style="width: {{ w.ringSize }}px; height: {{ w.ringSize }}px;">
+										<progress
+											class="ringshare-arc"
+											type="arc"
+											percent="{{ m.pct }}"
+											style="color: {{ m.color }}; width: {{ w.ringSize }}px; height: {{ w.ringSize }}px;"
+										></progress>
+										<div class="ringshare-center" style="width: {{ w.ringSize }}px; height: {{ w.ringSize }}px;">
+											<text class="ringshare-pct" style="color: {{ w.valueColor }};">{{ m.text }}</text>
+										</div>
+									</div>
+									<div class="ringshare-info">
+										<text class="ringshare-name" style="color: {{ w.rowColor }};">{{ m.name }}</text>
+										<text class="ringshare-sub" style="color: {{ w.hintColor }};">{{ m.sub }}</text>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- 单环分段:整圈 = 当日总量(100%),各模型弧段在 12 点起按占比顺次拼接;
+						    利用 progress(arc) 原生 start-angle/total-angle,无需旋转 -->
+						<div class="w-ringseg" elif="{{ w.isRingSeg }}">
+							<div class="head-row">
+								<text class="head-label" style="color: {{ w.labelColor }};">{{ w.label }}</text>
+							</div>
+							<div class="ringseg-wrap" style="width: {{ w.size }}px; height: {{ w.size }}px;">
+								<div class="ringseg-arcbox" for="m in w.items" style="width: {{ w.size }}px; height: {{ w.size }}px;">
+									<progress
+										class="ringseg-arc"
+										type="arc"
+										percent="100"
+										style="color: {{ m.color }}; width: {{ w.size }}px; height: {{ w.size }}px; start-angle: {{ m.start }}deg; total-angle: {{ m.sweep }}deg;"
+									></progress>
+								</div>
+								<div class="ringseg-center" style="width: {{ w.size }}px; height: {{ w.size }}px;">
+									<text class="ringseg-value" style="color: {{ w.valueColor }};">{{ w.value }}</text>
+								</div>
+							</div>
+							<div class="ringseg-legend" if="{{ w.legend.length > 0 }}">
+								<div class="ringseg-legend-row" for="li in w.legend">
+									<div class="ringseg-dot" style="background-color: {{ li.color }};"></div>
+									<text class="ringseg-line" style="color: {{ w.rowColor }};">{{ li.text }}</text>
+								</div>
+							</div>
+						</div>
+
+						<!-- 表格:竖表头 + ≤3 列(DSBand 峰谷定价表风格) -->
+						<div class="w-table" elif="{{ w.isTable }}">
+							<div class="head-row">
+								<text class="head-label" style="color: {{ w.labelColor }};">{{ w.label }}</text>
+							</div>
+							<div class="table-colhead" if="{{ w.tableColumns.length > 0 }}">
+								<text class="table-corner"></text>
+								<text class="table-cell table-cell-head" for="c in w.tableColumns">{{ c }}</text>
+							</div>
+							<div class="table-row" for="row in w.tableRows">
+								<text class="table-name">{{ row.name }}</text>
+								<text class="table-cell" for="c in row.cells">{{ c }}</text>
+							</div>
+						</div>
+
+						<!-- 提示文本 -->
+						<div class="w-note" else>
+							<text class="note-text">{{ w.value }}</text>
+						</div>
+
+						<!-- 区块分隔线:同一板块(group)内相邻组件不画,见 w.showDivider -->
+						<div
+							class="widget-divider"
+							if="{{ w.showDivider && $idx < prov.widgets.length - 1 }}"
+						></div>
+				</div>
+				<!-- 末端空隙由 .content padding-bottom 预留 -->
+			</scroll>
+			</div>
+
+			<!-- 空态:无启用供应商 -->
+			<div class="panel" if="{{ providers.length === 0 }}">
+				<div class="empty">
+					<text class="empty-title">{{ $t('provider.none') }}</text>
+					<text class="empty-hint">{{ $t('provider.noneHint') }}</text>
+				</div>
+			</div>
+		</swiper>
+	</div>
+</template>
+
+<style>
+@import "./dashboard.css";
+</style>
+
+<script>
+import router from "@system.router";
+import device from "@system.device";
+import {
+	startSync as mockStartSync,
+	stopSync as mockStopSync,
+} from "../../common/mock-client";
+import {
+	startSync as httpStartSync,
+	stopSync as httpStopSync,
+} from "../../common/http-client";
+import {
+	startSync as icStartSync,
+	stopSync as icStopSync,
+} from "../../common/interconnect-client";
+import {
+	minutesAgo,
+	statusColor,
+	formatClockHM,
+} from "../../common/snapshot";
+import { resolveSyncConfig } from "../../common/sync-config";
+import { loadCachedSnapshot } from "../../common/cache";
+import { restore } from "../../common/screen";
+import { arcClockChars } from "../../common/clock-arc";
+import { isPeakActive, CLOCK_PEAK_COLOR, CLOCK_VALLEY_COLOR, CLOCK_NORMAL_COLOR } from "../../common/pricing";
+import { resolveTheme } from "../../common/theme";
+import { buildWidgetItems } from "../../common/widgets";
+import { sanitizeClockRule } from "../../common/peak-config";
+
+const CLOCK_INTERVAL = 1000; // 1s tick:分钟跳变/峰谷切换最多延迟 1s,唤醒后 1s 内自愈
+const SYNC_FRESH_SECS = 180; // 快照 3 分钟内视为「已同步」,超过显示「缓存」
+// 供应商相对时间文案为分钟粒度,秒级刷新无意义;5s 窗口检查,
+// 内容无变化时不重建数组(整组替换会重建 widgets 子树,滚动中的页面被拉回顶端)
+const STATUS_REFRESH_MS = 5000;
+
+export default {
+	private: {
+		clockText: "--:--", // 时钟源数据(顶层响应式,变更驱动 clockChars 计算属性)
+		clockPeak: false, // 当前是否处于高峰计费时段(时钟配色)
+
+		statusText: "",
+		pillClass: "pill-wait",
+		pillTextColor: "#8a8a8a",
+		mockFlag: false,
+
+		providers: [], // 每项:{id,name,accent,status,statusText,statusColor,widgets[]}
+		headerTitle: 'LLMBand', // 顶栏品牌文字:当前供应商名(无供应商时 LLMBand)
+
+		swipeIndex: 0,
+		swipeStartX: -1,
+		swipeStartY: -1,
+
+		// 设备档位:""=10/10NFC(212px 胶囊) "s"=9(192px 胶囊) "w"=pro 方形宽屏
+		tier: "",
+		useFlatClock: false, // 宽屏(pro)用平面时钟,窄屏用弧形时钟
+
+		lastSnapTime: 0, // 最近渲染的快照 generatedAt(去重)
+		lastStatusCheck: 0, // 上次供应商状态刷新时间(降频用)
+		gotLiveData: false, // 已收到实时数据后跳过缓存渲染
+		lastSnap: null, // 最近一次渲染的快照(供周期刷新状态文案)
+
+		// 峰谷规则:由当前页供应商预设决定(插件 template.band.clock 透传 display);
+		// null 表示该供应商未启用峰谷配色(时钟保持白色)
+		clockRule: null,
+	},
+
+	// 计算属性:时钟字符数组由顶层响应式数据派生(与原项目一致)
+	computed: {
+		clockChars() {
+			const chars = arcClockChars(this.clockText);
+			const color = this.peakTextColor();
+			for (const c of chars) c.color = color;
+			return chars;
+		},
+		clockColor() {
+			return this.peakTextColor();
+		},
+	},
+
+	onInit() {
+		this.initDeviceProfile();
+
+		this.clockTimer = setInterval(() => this.tickClock(), CLOCK_INTERVAL);
+		this.tickTimer = setTimeout(() => this.tickClock(), 0);
+		this.renderEmpty();
+		// 缓存渲染 300ms 内完成(收到实时数据则跳过,避免覆盖)
+		this.cacheTimer = setTimeout(() => {
+			loadCachedSnapshot((snap) => {
+				if (snap && !this.gotLiveData) this.renderSnapshot(snap);
+			});
+		}, 300);
+	},
+
+	onShow() {
+		// 息屏唤醒会重新触发 onShow,期间定时器可能被挂起 → 立即刷新时钟
+		this.tickClock();
+		this.startSync();
+	},
+
+	onHide() {
+		mockStopSync();
+		httpStopSync();
+		icStopSync();
+		restore();
+	},
+
+	onDestroy() {
+		mockStopSync();
+		httpStopSync();
+		icStopSync();
+		restore();
+		if (this.clockTimer) {
+			clearInterval(this.clockTimer);
+			this.clockTimer = null;
+		}
+		if (this.cacheTimer) {
+			clearTimeout(this.cacheTimer);
+			this.cacheTimer = null;
+		}
+		if (this.tickTimer) {
+			clearTimeout(this.tickTimer);
+			this.tickTimer = null;
+		}
+	},
+
+	// 按屏幕宽度/形状判定档位(与原项目一致)
+	initDeviceProfile() {
+		device.getInfo({
+			success: (ret) => {
+				const w = ret && ret.screenWidth;
+				const shape = ret && ret.screenShape;
+				let tier = "";
+				if (shape === "rect" || (typeof w === "number" && w >= 300)) {
+					tier = "w";
+				} else if (typeof w === "number" && w > 0 && w <= 200) {
+					tier = "s";
+				}
+				this.tier = tier;
+				this.useFlatClock = tier === "w";
+			},
+		});
+	},
+
+	// swiper 翻页:跟随当前供应商的峰谷规则 + 顶栏名称切换
+	onSwiperChange(e) {
+		if (e && e.index != null) {
+			this.swipeIndex = e.index;
+		}
+		const views = this.providers;
+		if (views.length) {
+			const i = Math.max(0, Math.min(this.swipeIndex, views.length - 1));
+			this.useClockRule(views[i].clockRule);
+			this.headerTitle = views[i].name;
+		}
+	},
+
+	getTouch(evt, key) {
+		const list = evt && (evt.changedTouches || evt.touches);
+		const t = list && list[0];
+		if (!t) return -1;
+		const v =
+			t[key] != null
+				? t[key]
+				: key === "clientX"
+				? t.pageX != null ? t.pageX : t.screenX
+				: t.pageY != null ? t.pageY : t.screenY;
+		return v != null ? v : -1;
+	},
+
+	onSwipeStart(evt) {
+		const x = this.getTouch(evt, "clientX");
+		const y = this.getTouch(evt, "clientY");
+		if (x < 0 || y < 0) return;
+		this.swipeStartX = x;
+		this.swipeStartY = y;
+	},
+
+	onSwipeEnd(evt) {
+		if (this.swipeStartX < 0) return;
+		const x = this.getTouch(evt, "clientX");
+		const y = this.getTouch(evt, "clientY");
+		const dx = x - this.swipeStartX;
+		const dy = y - this.swipeStartY;
+		this.swipeStartX = -1;
+		// 仅在第一页:手指向右滑动 ≥75px 且 Y 轴偏移 ≤25px 时退出
+		if (this.swipeIndex === 0 && x >= 0 && dx > 75 && Math.abs(dy) <= 25) {
+			router.back();
+		}
+	},
+
+	// 时钟:每秒检查,仅当分钟文本/峰谷状态变化时更新顶层响应式数据
+	// (1s tick 下避免每秒无效赋值触发重绘,字符数组由 computed.clockChars 派生驱动视图)
+	tickClock() {
+		const now = new Date();
+		const text = formatClockHM(now);
+		const rule = this.clockRule;
+		const peak = rule && rule.enabled !== false ? isPeakActive(now, rule) : false;
+		if (text !== this.clockText) this.clockText = text;
+		if (peak !== this.clockPeak) this.clockPeak = peak;
+		// 周期刷新:胶囊新鲜度(顶层字段,仅变化时写);
+		// 供应商相对时间为分钟粒度,降频 5s 检查且内容无变化时不重建数组
+		this.applyPill(this.lastSnap);
+		if (this.lastSnap && now.getTime() - this.lastStatusCheck >= STATUS_REFRESH_MS) {
+			this.lastStatusCheck = now.getTime();
+			this.refreshProviderStatuses();
+		}
+	},
+
+
+	// 时钟配色:预设未启用(clockRule 空/ enabled=false)→ 白;
+	// 启用 → 高峰橘红 / 非高峰绿(规则即当前供应商预设)
+	peakTextColor() {
+		const rule = this.clockRule;
+		if (!rule || rule.enabled === false) return CLOCK_NORMAL_COLOR;
+		const c = rule.colors || {}
+		const peak = c.peak || CLOCK_PEAK_COLOR;
+		const valley = c.valley || CLOCK_VALLEY_COLOR;
+		return this.clockPeak ? peak : valley;
+	},
+
+	// 切页/收快照:生效规则 = 当前供应商预设(插件 template.band.clock 透传 display);
+	// 传 null → 不启用峰谷配色(时钟白色)
+	useClockRule(ruleOrNull) {
+		this.clockRule = ruleOrNull && ruleOrNull.enabled !== false ? sanitizeClockRule(ruleOrNull) : null;
+		this.tickClock(); // 立即按新规则刷新配色
+	},
+	// 数据同步
+	startSync() {
+		const cfg = resolveSyncConfig(this.$app);
+		this.mockFlag = cfg.mock;
+
+		const handlers = {
+			onSnapshot: (snap) => {
+				if (this.lastSnapTime === snap.generatedAt) return;
+				this.lastSnapTime = snap.generatedAt;
+				this.gotLiveData = true;
+				this.renderSnapshot(snap);
+			},
+			onOffline: () => {
+				this.setPill("pill-bad", "#ff7e7e", this.$t("sync.offline"));
+			},
+			onUnavailable: () => {
+				this.setPill("pill-bad", "#ff7e7e", this.$t("sync.noBle"));
+			},
+			onOpen: () => {
+				httpStopSync();
+			},
+		};
+
+		if (cfg.mock) { 
+			mockStartSync(handlers, { mockScene: cfg.mockScene });
+			return;
+		}
+		if (cfg.transport === "http") {
+			httpStartSync(handlers, { url: cfg.snapshotUrl });
+			return;
+		}
+		if (cfg.transport === "interconnect") {
+			icStartSync(handlers);
+			return;
+		}
+		// auto:interconnect 优先(真机),http 兜底(模拟器)
+		icStartSync(handlers);
+		httpStartSync(
+			{ onSnapshot: handlers.onSnapshot },
+			{ url: cfg.snapshotUrl }
+		);
+	},
+
+	// 快照 → 供应商页:显示规则 = 框架默认 + 快照 display(插件 template.band);本地无供应商知识。
+	// 采用分帧渲染:先按供应商逐页加入,再每帧喂入若干组件块,
+	// 避免“一帧创建整棵新子树”触发宿主崩溃(真机经验:单次更新内容过多易崩)。
+	renderSnapshot(snap) {
+		this.lastSnap = snap;
+		this.applyPill(snap);
+		const providers = [];
+		for (const p of snap.providers) {
+			try {
+				providers.push(this.buildProviderView(p));
+			} catch (err) {
+				// 单供应商渲染失败不拖垮整页(其余照常显示);引擎侧 console 有堆栈。
+				console.error("[snapshot] provider 渲染失败:", p && p.id, err);
+			}
+		}
+		this.providers = providers;
+		this.headerTitle = providers.length ? providers[0].name : 'LLMBand';
+		if (providers.length) {
+			// 时钟跟随首个供应商的峰谷策略(单页纵向布局,全局规则取第一个 provider)
+			const i = Math.max(0, Math.min(this.swipeIndex, providers.length - 1));
+			this.useClockRule(providers[i].clockRule);
+		} else {
+			this.useClockRule(null);
+		}
+	},
+
+	buildProviderView(p) {
+		const status = p.status;
+		const theme = resolveTheme(p.display);
+		// 完整模板渲染;hbar/table 行数已在组件层受限(≤3 行,真机稳定值)
+		const widgets = buildWidgetItems(p, theme);
+		
+		return {
+			id: p.id,
+			name: p.name,
+			accent: theme.theme.accent || p.accent,
+			// 供应商字体颜色:theme.nameColor 缺省跟随 accent
+			nameColor: theme.theme.nameColor || theme.theme.accent || p.accent,
+			status,
+			// 供应商同步状态仅由表头状态点表达;相对时间由顶部同步胶囊统一展示,
+			// 避免右侧文本挤压供应商名称(且文本分钟变化不再触发数组重建)
+			statusColor: statusColor(status),
+			widgets,
+			// DSBand 式区块布局:间隔与分隔线由预设 layout 约束驱动
+			gap: theme.layout.sectionGap,
+			showDividers: theme.layout.showDividers !== false,
+			// 峰谷规则:预设声明了 template.band.clock(随快照 display)才启用
+			clockRule: theme.clock ? sanitizeClockRule(theme.clock) : null,
+		};
+	},
+
+	// 检查供应商状态(ok/stale 等)是否变化:内容无变化时不重建数组
+	// (整组替换会触发 widgets 子树重建,把滚动中的页面拉回顶端)
+	refreshProviderStatuses() {
+		if (!this.lastSnap || !this.providers.length) return;
+		const snaps = this.lastSnap.providers;
+		let changed = this.providers.length !== snaps.length;
+		const next = [];
+		for (let i = 0; i < snaps.length; i++) {
+			const view = this.buildProviderView(snaps[i]);
+			next.push(view);
+			const cur = this.providers[i];
+			if (
+				!changed &&
+				(!cur ||
+					cur.id !== view.id ||
+					cur.statusColor !== view.statusColor ||
+					cur.accent !== view.accent)
+			) {
+				changed = true;
+			}
+		}
+		if (changed) this.providers = next;
+	},
+
+	// 同步胶囊(按快照生成时间派生):
+	// - unavailable → 离线
+	// - 3 分钟内 → 已同步;超过 → 缓存(分钟数)
+	applyPill(snap) {
+		if (!snap) return;
+		let pillClass, textColor, text;
+		if (snap.freshness === "unavailable") {
+			pillClass = "pill-bad";
+			textColor = "#ff7e7e";
+			text = this.$t("sync.offline");
+		} else if (Date.now() / 1000 - snap.generatedAt <= SYNC_FRESH_SECS) {
+			pillClass = "pill-ok";
+			textColor = "#67ce91";
+			text = this.mockFlag
+				? this.$t("sync.demo") + " · " + this.$t("sync.current")
+				: this.$t("sync.current");
+		} else {
+			const min = minutesAgo(snap.generatedAt);
+			pillClass = "pill-warn";
+			textColor = "#f5c344";
+			text = this.$t("sync.cached") + (min !== null ? " · " + min + "m" : "");
+		}
+		if (
+			text !== this.statusText ||
+			pillClass !== this.pillClass ||
+			textColor !== this.pillTextColor
+		) {
+			this.setPill(pillClass, textColor, text);
+		}
+	},
+
+	setPill(pillClass, textColor, text) {
+		this.pillClass = pillClass;
+		this.pillTextColor = textColor;
+		this.statusText = text;
+	},
+
+	// 初始/无数据
+	renderEmpty() {
+		this.setPill("pill-wait", "#8a8a8a", this.$t("sync.waiting"));
+		this.providers = [];
+		this.useClockRule(null);
+	},
+};
+</script>

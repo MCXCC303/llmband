@@ -1,0 +1,18 @@
+{
+  "sync": {
+    "current": "已同步",
+    "cached": "缓存",
+    "offline": "离线",
+    "waiting": "等待同步",
+    "demo": "演示",
+    "noBle": "无互联通道"
+  },
+  "provider": {
+    "none": "暂无启用的供应商",
+    "noneHint": "请在 AstroBox 插件页面启用供应商并配置 API Key",
+    "unconfigured": "未配置",
+    "ok": "正常",
+    "stale": "缓存",
+    "error": "错误"
+  }
+}

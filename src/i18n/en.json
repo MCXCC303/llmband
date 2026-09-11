@@ -1,0 +1,18 @@
+{
+  "sync": {
+    "current": "Synced",
+    "cached": "Cached",
+    "offline": "Offline",
+    "waiting": "Waiting",
+    "demo": "Demo",
+    "noBle": "No channel"
+  },
+  "provider": {
+    "none": "No providers enabled",
+    "noneHint": "Enable a provider and set its API Key in the AstroBox plugin page",
+    "unconfigured": "Not set",
+    "ok": "OK",
+    "stale": "Stale",
+    "error": "Error"
+  }
+}

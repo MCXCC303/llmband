@@ -1,0 +1,711 @@
+/* LLMBand 表盘 —— 视觉体系仿照 DSBand:
+ * 每组件一个区块:居中标签 → 居中大数字 → 图形(条/环/柱/堆叠/横置条);
+ * 分隔线 + 舒展留白;字号基准与 DSBand 对齐(正文 ≥15-16px,大数字 24-64px)。
+ * 预设可通过 widgetStyles.<type> 覆盖字号/尺寸(见 theme.js 约束目录)。 */
+
+.page {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+/* ============ 顶栏:时钟(与原项目 DSBand 一致) ============ */
+.topbar {
+  width: 100%;
+  height: 74px;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.arc-clock {
+  position: relative;
+  width: 212px; /* 2 × 时钟圆心 x(106),保证字符水平居中 */
+  height: 40px;
+}
+
+.arc-char-box {
+  position: absolute;
+  width: 14px;
+  height: 22px;
+  justify-content: center;
+  align-items: center;
+}
+
+.clock-char {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.rot-neg20 {
+  transform: rotate(-20deg);
+  transform-origin: 7px 11px;
+}
+.rot-neg10 {
+  transform: rotate(-10deg);
+  transform-origin: 7px 11px;
+}
+.rot-0 {
+  transform: rotate(0deg);
+  transform-origin: 7px 11px;
+}
+.rot-pos10 {
+  transform: rotate(10deg);
+  transform-origin: 7px 11px;
+}
+.rot-pos20 {
+  transform: rotate(20deg);
+  transform-origin: 7px 11px;
+}
+
+.brand {
+  font-size: 20px;
+  font-weight: bold;
+  color: #9db8ff;
+  margin-top: 14px;
+}
+
+.clock-flat {
+  font-size: 30px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+}
+
+/* ============ 同步胶囊行 ============ */
+.pill-row {
+  width: 100%;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.pill {
+  padding-left: 18px;
+  padding-right: 18px;
+  height: 32px;
+  border-radius: 16px;
+  justify-content: center;
+  align-items: center;
+}
+
+.pill-text {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.pill-ok { background-color: rgba(103, 206, 145, 0.18); }
+.pill-warn { background-color: rgba(245, 195, 68, 0.18); }
+.pill-bad { background-color: rgba(255, 126, 126, 0.18); }
+.pill-wait { background-color: rgba(138, 138, 138, 0.18); }
+
+/* ============ swiper / 面板 / 滚动内容 ============ */
+.swiper {
+  flex: 1;
+}
+
+.panel {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.content {
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  padding-left: 16px;
+  padding-right: 16px;
+  /* 胶囊屏末端预留空隙(框架级,不依赖套接模板) */
+  padding-bottom: 56px;
+}
+
+/* ============ 供应商块(多供应商纵向堆叠):必须显式撑满宽度,
+ * 否则子组件 width:100% 失去参考宽度(table 列塌缩/大字被裁) ============ */
+.prov-block {
+  width: 100%;
+  flex-direction: column;
+}
+
+/* ============ 供应商页头:状态点 + 名称(同步态由顶部胶囊表达) ============ */
+.prov-header {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  padding-top: 12px;
+  padding-bottom: 10px;
+}
+
+.prov-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  margin-right: 8px;
+}
+
+.prov-name {
+  font-size: 22px;
+  font-weight: bold;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+.prov-header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0 2px 0;
+}
+
+.prov-divider {
+  height: 1px;
+  background-color: #333333;
+  margin: 10px 24px 12px 24px;
+}
+
+/* ============ 区块骨架 ============ */
+.widget {
+  width: 100%;
+  flex-direction: column;
+}
+
+.widget-divider {
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background-color: #2a2d33;
+  margin-top: 14px;
+  margin-bottom: 4px;
+}
+
+/* ============ 图头(bar/bars/stack):居中标签 + 居中大数字(DSBand 舒展双行) ============ */
+.head-row {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.head-label {
+  font-size: 20px;
+  font-weight: bold;
+  color: #8a8a8a;
+  text-align: center;
+  margin-bottom: 2px;
+  lines: 1;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.head-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 4px;
+  lines: 1;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* 行内标签(旧布局保留,当前未使用) */
+.head-inline-label {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+/* ============ widget:balance(数值大字,居中) ============ */
+.w-balance {
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.hero-f64 { font-size: 64px; font-weight: bold; color: #ffffff; }
+.hero-f56 { font-size: 56px; font-weight: bold; color: #ffffff; }
+.hero-f48 { font-size: 48px; font-weight: bold; color: #ffffff; }
+.hero-f40 { font-size: 40px; font-weight: bold; color: #ffffff; }
+.hero-f32 { font-size: 32px; font-weight: bold; color: #ffffff; }
+.hero-f28 { font-size: 28px; font-weight: bold; color: #ffffff; }
+
+.w-hint {
+  font-size: 16px;
+  color: #8a8a8a;
+  margin-top: 4px;
+}
+
+/* ============ widget:kv(键值行,舒展行距) ============ */
+.w-kv {
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.kv-label {
+  font-size: 19px;
+  color: #8a8a8a;
+  flex: 1;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+.kv-value {
+  font-size: 19px;
+  font-weight: bold;
+  color: #ffffff;
+  lines: 1;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  text-align: right;
+  margin-left: 8px;
+}
+
+/* ============ widget:bar(进度条) ============ */
+.w-bar {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.bar-track {
+  width: 100%;
+  height: 12px;
+  background-color: #2a2d33;
+  overflow: hidden;
+}
+
+/* ============ widget:ring(环状图) ============ */
+.w-ring {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.ring-wrap {
+  position: relative;
+}
+
+.ring-arc {
+  stroke-width: 8px;
+  layer-color: #2a2d33;
+  total-angle: 360deg;
+}
+
+.ring-center {
+  position: absolute;
+  left: 0;
+  top: 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.ring-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.ring-caption {
+  font-size: 20px;
+  color: #8a8a8a;
+  text-align: center;
+  margin-top: 6px;
+  lines: 1;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ============ widget:bars(柱状图) ============ */
+.w-bars {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.bars-strip {
+  width: 100%;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.bars-anchors {
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.bars-anchor {
+  font-size: 15px;
+  color: #8a8a8a;
+  lines: 1;
+}
+
+/* ============ widget:stack(占比堆叠条) ============ */
+.w-stack {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.stack-bar {
+  width: 100%;
+  height: 12px;
+  background-color: #2a2d33;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.stack-seg {
+  height: 12px;
+}
+
+.stack-hints {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.stack-hint {
+  font-size: 15px;
+  font-weight: bold; /* 无格式说明的文本默认加粗(与 DSBand 数值一致) */
+  color: #8a8a8a;
+  margin-top: 2px;
+  text-align: center;
+}
+
+/* ============ widget:hbar(横置条形图:每项一行水平条) ============ */
+.w-hbar {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.hbar-row {
+  width: 100%;
+  flex-direction: column;
+  margin-bottom: 8px;
+}
+
+.hbar-head {
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.hbar-name {
+  font-size: 16px;
+  color: #8a8a8a;
+  flex: 1;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+.hbar-track {
+  width: 100%;
+  height: 8px;
+  background-color: #2a2d33;
+  overflow: hidden;
+}
+
+.hbar-rows {
+  width: 100%;
+  flex-direction: column;
+}
+
+.hbar-fill {
+  background-color: #4D6BFE;
+}
+
+.hbar-value {
+  font-size: 15px;
+  font-weight: bold; /* 无格式说明的数值默认加粗(与 DSBand 数值一致) */
+  color: #c9ced6;
+  text-align: right;
+  margin-left: 8px;
+  lines: 1;
+}
+
+/* ============ widget:ringshare(占比圆环:每模型一环,弧长=占总量比例) ============ */
+.w-ringshare {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.ringshare-list {
+  width: 100%;
+  flex-direction: column;
+}
+
+.ringshare-item {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.ringshare-box {
+  position: relative;
+  margin-right: 14px;
+}
+
+.ringshare-arc {
+  stroke-width: 6px;
+  layer-color: #2a2d33;
+  total-angle: 360deg;
+}
+
+.ringshare-center {
+  position: absolute;
+  left: 0;
+  top: 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.ringshare-pct {
+  font-size: 17px;
+  font-weight: bold;
+  color: #ffffff;
+  lines: 1;
+}
+
+.ringshare-info {
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ringshare-name {
+  font-size: 21px;
+  font-weight: bold;
+  color: #c9ced6;
+  lines: 1;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.ringshare-sub {
+  font-size: 17px;
+  color: #8a8a8a;
+  lines: 1;
+  margin-top: 2px;
+}
+
+/* ============ widget:ringseg(单环同心弧:整圈 = 总量,每模型一层弧,半径由外向内) ============ */
+.w-ringseg {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.ringseg-wrap {
+  position: relative;
+}
+
+.ringseg-arcbox {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.ringseg-arc {
+  stroke-width: 12px;
+}
+
+.ringseg-center {
+  position: absolute;
+  left: 0;
+  top: 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.ringseg-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffffff;
+  lines: 1;
+}
+
+.ringseg-legend {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.ringseg-legend-row {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: 3px;
+}
+
+.ringseg-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  margin-right: 6px;
+}
+
+.ringseg-line {
+  font-size: 18px;
+  font-weight: bold;
+  color: #c9ced6;
+  text-align: center;
+  lines: 1;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.ringseg-legend {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.ringseg-line {
+  font-size: 15px;
+  font-weight: bold;
+  color: #8a8a8a;
+  margin-top: 2px;
+  text-align: center;
+  lines: 1;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+/* ============ widget:table(竖表头 + ≤3 列,DSBand 定价表风格) ============ */
+.w-table {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.table-colhead {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  border-bottom-width: 1px;
+  border-bottom-color: #2a2d33;
+  padding-bottom: 4px;
+  margin-bottom: 2px;
+}
+
+.table-corner {
+  width: 60px;
+}
+
+.table-name {
+  width: 80px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #8a8a8a;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+.table-cell {
+  flex: 1;
+  font-size: 15px;
+  font-weight: bold;
+  color: #c9ced6;
+  text-align: center;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+/* 列头格(模板用多类 "table-cell table-cell-head";框架不支持后代选择器) */
+.table-cell-head {
+  color: #8a8a8a;
+  font-weight: normal;
+}
+
+.table-row {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  border-bottom-width: 1px;
+  border-bottom-color: #1c2026;
+}
+
+/* ============ widget:note(提示文本) ============ */
+.w-note {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.note-text {
+  font-size: 16px;
+  color: #8a8a8a;
+  text-align: center;
+  lines: 3;
+}
+
+/* ============ 空态 ============ */
+.empty {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.empty-title {
+  font-size: 26px;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.empty-hint {
+  font-size: 16px;
+  color: #8a8a8a;
+  text-align: center;
+  lines: 4;
+}
