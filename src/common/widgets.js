@@ -247,30 +247,37 @@ const BUILDERS = {
     }
   },
 
-  // 占比圆环:每模型一个小圆环,弧长 = 占总量比例(100% = 总量)
+  // 占比圆环:每模型一个小圆环。默认弧长 = 占总量比例(100% = 总量);
+  // rate 模式(插件预设 rate:true)下 series 是每个模型 0-100 的比率,弧长 = 该值本身
+  // (如"当日模型缓存率"),不做占比归一化。
   ringshare(w, prov, theme) {
     const st = theme.widgetStyles.ringshare || {}
     const series = numArr(w.series)
     if (!series || !series.length) return null
+    const isRate = w.rate === true
     const labels = strArr(w.seriesLabels)
     const count = Math.min(st.maxItems || 6, series.length)
     let total = 0
-    for (let i = 0; i < count; i++) {
-      if (series[i] > 0) total += series[i]
+    if (!isRate) {
+      for (let i = 0; i < count; i++) {
+        if (series[i] > 0) total += series[i]
+      }
+      if (total <= 0) return null
     }
-    if (total <= 0) return null
     const base = w.color || theme.theme.accent
     const items = []
     for (let i = 0; i < count; i++) {
       const v = series[i]
       if (v <= 0) continue
-      const pct = Math.round((v / total) * 100) // 环内数值保留整数
+      // rate 模式:该模型比率本身(整数百分比);占比模式:归一化到总量
+      const pct = isRate ? clampPct(v) : Math.round((v / total) * 100) // 环内数值保留整数
       const color = segColor(w, items.length, base)
       items.push({
         name: labels && labels[i] !== undefined ? labels[i] : '',
         pct,
         text: String(pct) + '%',
-        sub: rowText(v),
+        // rate 模式的副行会与环内百分比重复 → 留空(信息行只显示模型名)
+        sub: isRate ? '' : rowText(v),
         color,
       })
     }

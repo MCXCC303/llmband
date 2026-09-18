@@ -56,6 +56,8 @@ export function validateSnapshot(obj) {
                 colors: Array.isArray(w.colors)
                   ? w.colors.filter((x) => typeof x === 'string')
                   : null,
+                // ringshare rate 模式:series 为 0-100 的比率(弧长 = 该值本身,不做占比归一化)
+                rate: w.rate === true ? true : undefined,
               }))
           : [],
         // 插件预设 template.band 透传的显示规则(手环端 merge 的中间层)

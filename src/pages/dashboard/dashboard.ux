@@ -136,7 +136,8 @@
 							</div>
 						</div>
 
-						<!-- 占比圆环:每模型一个小圆环,弧长 = 占总量比例(100% = 总量) -->
+						<!-- 占比圆环:每模型一个小圆环。默认弧长 = 占总量比例(100% = 总量);
+						     rate 模式(w.rate)下弧长 = 该模型 0-100 的比率本身(如当日缓存率) -->
 						<div class="w-ringshare" elif="{{ w.isRingShare }}">
 							<div class="head-row">
 								<text class="head-label" style="color: {{ w.labelColor }};">{{ w.label }}</text>
@@ -156,7 +157,7 @@
 									</div>
 									<div class="ringshare-info">
 										<text class="ringshare-name" style="color: {{ w.rowColor }};">{{ m.name }}</text>
-										<text class="ringshare-sub" style="color: {{ w.hintColor }};">{{ m.sub }}</text>
+										<text class="ringshare-sub" style="color: {{ w.hintColor }};" if="{{ m.sub }}">{{ m.sub }}</text>
 									</div>
 								</div>
 							</div>

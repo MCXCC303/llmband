@@ -5,3 +5,7 @@
 /dist
 /build
 .husky/
+.vscode/
+.idea/
+.claude/
+

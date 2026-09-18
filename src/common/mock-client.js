@@ -41,7 +41,7 @@ function mockSnapshot(scene) {
             { type: 'bars', label: '近7日消费', value: '¥5.67', series: [0.4, 1.2, 0.6, 0.9, 0.3, 1.5, 0.77], seriesLabels: ['8/1', '8/2', '8/3', '8/4', '8/5', '8/6', '8/7'], group: 'usage7d' },
             { type: 'hbar', label: '近7日缓存命中率', value: '80.9%', series: [85.2, 78.4, 92.1, 80.9, 88.6, 76.3, 82.7], seriesLabels: ['8/1', '8/2', '8/3', '8/4', '8/5', '8/6', '8/7'], group: 'usage7d' },
             { type: 'hbar', label: '当日模型用量', value: '1.5M', series: [1020000, 453000, 28000], seriesLabels: ['Flash', 'Vision', 'Pro'] },
-            { type: 'ringshare', label: '当日用量占比', value: '1.5M', series: [1020000, 453000, 28000], seriesLabels: ['Flash', 'Vision', 'Pro'], colors: ['#4D6BFE', '#22D3EE', '#FBBF24'] },
+            { type: 'ringshare', label: '当日模型缓存率', value: '80.9%', rate: true, series: [90.2, 61.5, 78.4], seriesLabels: ['Flash', 'Vision', 'Pro'], colors: ['#4D6BFE', '#22D3EE', '#FBBF24'] },
             { type: 'ringseg', label: '当日占比·单环', value: '1.5M', series: [1020000, 453000, 28000], seriesLabels: ['Flash', 'Vision', 'Pro'], colors: ['#4D6BFE', '#22D3EE', '#FBBF24'] },
           ],
         },
