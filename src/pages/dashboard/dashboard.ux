@@ -58,6 +58,7 @@
 									style="width: {{ w.percent }}%; height: {{ w.barHeight }}px; border-radius: {{ w.barRadius }}px; background-color: {{ w.color }};"
 								></div>
 							</div>
+							<text class="w-hint" style="color: {{ w.hintColor }};" if="{{ w.hint }}">{{ w.hint }}</text>
 						</div>
 
 						<!-- 环状图 -->
@@ -74,6 +75,7 @@
 								</div>
 							</div>
 							<text class="ring-caption" style="color: {{ w.labelColor }};" if="{{ w.label }}">{{ w.label }}</text>
+							<text class="w-hint" style="color: {{ w.hintColor }};" if="{{ w.hint }}">{{ w.hint }}</text>
 						</div>
 
 						<!-- 柱状图(带首/中/末日期锚点) -->

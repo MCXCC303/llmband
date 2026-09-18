@@ -102,6 +102,7 @@ const BUILDERS = {
       isBar: true,
       label: w.label || '',
       value: w.value,
+      hint: w.hint || '',
       color: w.color || theme.theme.accent,
       percent: clampPct(w.percent),
       // 三段式:居中标签 + 大数字 + 条
@@ -119,6 +120,7 @@ const BUILDERS = {
       isRing: true,
       label: w.label || '',
       value: w.value,
+      hint: w.hint || '',
       color: w.color || theme.theme.accent,
       percent: clampPct(w.percent),
       labelSize: st.labelSize,
