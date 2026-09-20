@@ -254,6 +254,7 @@ import {
 } from "../../common/interconnect-client";
 import {
 	minutesAgo,
+	formatCacheDate,
 	statusColor,
 	formatClockHM,
 } from "../../common/snapshot";
@@ -583,7 +584,7 @@ export default {
 
 	// 同步胶囊(按快照生成时间派生):
 	// - unavailable → 离线
-	// - 3 分钟内 → 已同步;超过 → 缓存(分钟数)
+	// - 3 分钟内 → 已同步;超过 → 缓存(分钟数,超过 99 分钟改显日期,与 DSBand 一致)
 	applyPill(snap) {
 		if (!snap) return;
 		let pillClass, textColor, text;
@@ -601,7 +602,11 @@ export default {
 			const min = minutesAgo(snap.generatedAt);
 			pillClass = "pill-warn";
 			textColor = "#f5c344";
-			text = this.$t("sync.cached") + (min !== null ? " · " + min + "m" : "");
+			// 超过 99 分钟改显日期(如 8/11):分钟数三位起会超出胶囊宽度
+			text =
+				min !== null && min > 99
+					? this.$t("sync.cached") + " · " + formatCacheDate(snap.generatedAt)
+					: this.$t("sync.cached") + (min !== null ? " · " + min + "m" : "");
 		}
 		if (
 			text !== this.statusText ||

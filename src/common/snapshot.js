@@ -94,6 +94,14 @@ export function minutesAgo(unixSec) {
   return diff > 0 ? Math.floor(diff / 60) : 0
 }
 
+/** 缓存日期标签:MM/DD(分钟数超过 99 时替代分钟文案,防止胶囊超宽;与 DSBand 一致) */
+export function formatCacheDate(unixSec) {
+  if (typeof unixSec !== 'number' || !isFinite(unixSec)) return '--/--'
+  const d = new Date(unixSec * 1000)
+  if (isNaN(d.getTime())) return '--/--'
+  return (d.getMonth() + 1) + '/' + d.getDate()
+}
+
 export function formatClockHM(now) {
   const pad = n => (n < 10 ? '0' + n : String(n))
   return pad(now.getHours()) + ':' + pad(now.getMinutes())
